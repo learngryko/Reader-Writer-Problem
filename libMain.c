@@ -6,12 +6,10 @@
 struct node {
 	pthread_t * thread;
 	struct node * next;
-}
+};
 
 
 pthread_mutex_t mutex;
-
-int a=0;
 
 void* czytelnik(void *arg) {
     int *i = arg;
@@ -31,9 +29,12 @@ int main(int argc, char* argv[]) {
 	if(argc<3) return -1;
 	int W = atoi(argv[1]);
 	int R = atoi(argv[2]);
+    printf("%d \t %d\n",sizeof(pthread_t),sizeof(pthread_t*));
+    pthread_t * buff;
 	printf("%d \t %d\n",W,R);
-    node * head = malloc(sizeof(node));
-	head->thread
+    struct node * head = malloc(sizeof(struct node));
+    head->thread=NULL;
+    head->next=NULL;
 	pthread_t p,p2;
     pthread_mutex_init(&mutex, NULL);
 	int *x;
