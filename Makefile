@@ -1,2 +1,2 @@
 all:
-	gcc libMain.c -o libMain.o
+	gcc -pthread libMain.c -o libMain
