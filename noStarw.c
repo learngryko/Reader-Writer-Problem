@@ -19,11 +19,14 @@ pthread_mutex_t mutexcheck;
 int coutR = 0;// ilosc czytelnikow w bibliotece
 int coutW = 0;// ilosc pisarzy w bibliotece
 
+/*
 void sig_handler_sigusr1(int signum){
     for(int i=0;i<X;i++)
         printf("\t%d[%d]",check[i],i);
     printf("\n");
 }
+*/
+
 
 void *writer(void *arg) {
     int zarodek;
