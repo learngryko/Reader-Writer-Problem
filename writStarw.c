@@ -15,6 +15,7 @@ pthread_mutex_t mutexR;
 pthread_mutex_t mutex;
 pthread_cond_t cond;
 pthread_mutex_t mutexcheck;
+int W=0,R=0;
 
 int coutR = 0;// ilosc czytelnikow w bibliotece
 int coutW = 0;// ilosc pisarzy w bibliotece
@@ -40,10 +41,10 @@ void *writer(void *arg) {
         while (coutR > 0)
             pthread_cond_wait(&cond, &mutex);
         coutW++;
-        printf("ReaderQ: 4 WriterQ: 2 [in: R:%d W:%d]\t%d\n", coutR, coutW,i);
+        printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
         usleep(500000+rand()%8000000);
         coutW--;
-        printf("ReaderQ: 4 WriterQ: 2 [in: R:%d W:%d]\t%d\n", coutR, coutW,i);
+        printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
         pthread_mutex_lock(&mutexcheck);
         check[i]++;
         pthread_mutex_unlock(&mutexcheck);
@@ -65,13 +66,13 @@ void *reader(void *arg) {
         pthread_mutex_unlock(&mutex);
         pthread_mutex_lock(&mutexR);
         coutR++;
-        printf("ReaderQ: 4 WriterQ: 2 [in: R:%d W:%d]\t%d\n", coutR, coutW,i);
+        printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
         pthread_mutex_unlock(&mutexR);
         usleep(500000+rand()%8000000);
         pthread_mutex_lock(&mutexR);
         coutR--;
         pthread_mutex_unlock(&mutexR);
-        printf("ReaderQ: 4 WriterQ: 2 [in: R:%d W:%d]\t%d\n", coutR, coutW,i);
+        printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
         pthread_mutex_lock(&mutexcheck);
         check[i]++;
         pthread_mutex_unlock(&mutexcheck);
@@ -83,14 +84,11 @@ void *reader(void *arg) {
 
 
 int main(int argc, char *argv[]) {
-    /*
 	if(argc<3) return -1;
     int i=0;
-	int W = atoi(argv[1]);
-	int R = atoi(argv[2]);
-     */
+    W = atoi(argv[1]);
+	R = atoi(argv[2]);
     //signal(SIGUSR1,sig_handler_sigusr1);
-    int i=0;
     pthread_mutex_init(&mutexR, NULL);
     pthread_mutex_init(&mutex, NULL);
     pthread_mutex_init(&mutexcheck, NULL);
