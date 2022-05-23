@@ -5,18 +5,15 @@
 #include <unistd.h>
 #include <signal.h>
 
-#define X 400
 
 
 
-
-int check[X];
 pthread_mutex_t mutexR;
 pthread_mutex_t mutex;
 pthread_cond_t cond;
 pthread_mutex_t mutexcheck;
 int W=0,R=0;
-
+int * check=NULL;
 int coutR = 0;// ilosc czytelnikow w bibliotece
 int coutW = 0;// ilosc pisarzy w bibliotece
 
@@ -42,7 +39,7 @@ void *writer(void *arg) {
             pthread_cond_wait(&cond, &mutex);
         coutW++;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
-        usleep(500000+rand()%8000000);
+        usleep(rand()%8000000+500000);
         coutW--;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
         pthread_mutex_lock(&mutexcheck);
@@ -50,7 +47,7 @@ void *writer(void *arg) {
         pthread_mutex_unlock(&mutexcheck);
         pthread_cond_signal(&cond);
         pthread_mutex_unlock(&mutex);
-        usleep(5000000+rand()%8000000);
+        usleep(rand()%8000000+5000000);
     }
 }
 
@@ -68,7 +65,7 @@ void *reader(void *arg) {
         coutR++;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
         pthread_mutex_unlock(&mutexR);
-        usleep(500000+rand()%8000000);
+        usleep(rand()%8000000+500000);
         pthread_mutex_lock(&mutexR);
         coutR--;
         pthread_mutex_unlock(&mutexR);
@@ -78,7 +75,7 @@ void *reader(void *arg) {
         pthread_mutex_unlock(&mutexcheck);
         pthread_cond_signal(&cond);
         printf("\n");
-        usleep(5000000+rand()%8000000);
+        usleep(rand()%8000000+5000000);
     }
 }
 
@@ -93,21 +90,25 @@ int main(int argc, char *argv[]) {
     pthread_mutex_init(&mutex, NULL);
     pthread_mutex_init(&mutexcheck, NULL);
     pthread_cond_init(&cond, NULL);
-    pthread_t tab[X];
-    for ( i = 0; i < X; i++) {
-        int * a = (int*)malloc(sizeof(int));
+    pthread_t * tab=(pthread_t*)malloc(sizeof(pthread_t)*(W+R));
+    check=(int*)malloc(sizeof(int)*(W+R));
+
+    for ( i = 0; i < W; i++) {
+        int *a = (int *) malloc(sizeof(int));
         *a=i;
-        if (i % 4 == 0) {
-            if (pthread_create(&tab[i], NULL, &writer, a) != 0) {
-                perror("Failed to create thread");
-            }
-        } else {
-            if (pthread_create(&tab[i], NULL, &reader, a) != 0) {
-                perror("Failed to create thread");
-            }
+        if (pthread_create(&tab[i], NULL, &writer, a) != 0) {
+            perror("Failed to create thread");
         }
     }
-    for ( i = 0; i < X; i++) {
+    for ( i = W; i < W+R; i++) {
+        int *a = (int *) malloc(sizeof(int));\
+        *a=i;
+        if (pthread_create(&tab[i], NULL, &reader, a) != 0) {
+            perror("Failed to create thread");
+        }
+    }
+
+    for ( i = 0; i < W+R; i++) {
         if (pthread_join(tab[i], NULL) != 0) {
             perror("Failed to join thread");
         }
@@ -118,8 +119,5 @@ int main(int argc, char *argv[]) {
     pthread_mutex_destroy(&mutexR);
     pthread_mutex_destroy(&mutexcheck);
     pthread_cond_destroy(&cond);
-	for(int i=0;i<X;i++)
-        printf("\t%d[%d]",check[i],i);
-    printf("\n");
     return 0;
 }
