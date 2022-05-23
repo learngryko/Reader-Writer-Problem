@@ -1,3 +1,3 @@
 all:
-	gcc -pthread czytstarw.c -o czytstarw
+	gcc -pthread noStarw.c -o noStarw
 	gcc wake.c -o wake

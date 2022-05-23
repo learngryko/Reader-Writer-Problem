@@ -7,12 +7,14 @@
 
 #define X 400
 
+
+
+
 int check[X];
 pthread_mutex_t mutexR;
 pthread_mutex_t mutex;
 pthread_cond_t cond;
 pthread_mutex_t mutexcheck;
-static volatile sig_atomic_t sig = 0;
 
 int coutR = 0;// ilosc czytelnikow w bibliotece
 int coutW = 0;// ilosc pisarzy w bibliotece
@@ -24,6 +26,10 @@ void sig_handler_sigusr1(int signum){
 }
 
 void *writer(void *arg) {
+    int zarodek;
+    time_t tt;
+    zarodek = time(&tt);
+    srand(zarodek);
     int i = *(int*)arg;
     free(arg);
     while (1) {
@@ -32,23 +38,25 @@ void *writer(void *arg) {
             pthread_cond_wait(&cond, &mutex);
         coutW++;
         printf("ReaderQ: 4 WriterQ: 2 [in: R:%d W:%d]\t%d\n", coutR, coutW,i);
-        sleep(1);
+        usleep(500000+rand()%8000000);
         coutW--;
         printf("ReaderQ: 4 WriterQ: 2 [in: R:%d W:%d]\t%d\n", coutR, coutW,i);
         pthread_mutex_lock(&mutexcheck);
         check[i]++;
-
         pthread_mutex_unlock(&mutexcheck);
         pthread_cond_signal(&cond);
         pthread_mutex_unlock(&mutex);
-
-        sleep(5);
+        usleep(5000000+rand()%8000000);
     }
 }
 
 void *reader(void *arg) {
     int i= *(int*)arg;
     free(arg);
+    int zarodek;
+    time_t tt;
+    zarodek = time(&tt);
+    srand(zarodek);
     while (1) {
         pthread_mutex_lock(&mutex);
         pthread_mutex_unlock(&mutex);
@@ -56,7 +64,7 @@ void *reader(void *arg) {
         coutR++;
         printf("ReaderQ: 4 WriterQ: 2 [in: R:%d W:%d]\t%d\n", coutR, coutW,i);
         pthread_mutex_unlock(&mutexR);
-        sleep(1);
+        usleep(500000+rand()%8000000);
         pthread_mutex_lock(&mutexR);
         coutR--;
         pthread_mutex_unlock(&mutexR);
@@ -66,7 +74,7 @@ void *reader(void *arg) {
         pthread_mutex_unlock(&mutexcheck);
         pthread_cond_signal(&cond);
         printf("\n");
-        sleep(5);
+        usleep(5000000+rand()%8000000);
     }
 }
 
@@ -78,12 +86,12 @@ int main(int argc, char *argv[]) {
 	int W = atoi(argv[1]);
 	int R = atoi(argv[2]);
      */
+    //signal(SIGUSR1,sig_handler_sigusr1);
     int i=0;
     pthread_mutex_init(&mutexR, NULL);
     pthread_mutex_init(&mutex, NULL);
     pthread_mutex_init(&mutexcheck, NULL);
     pthread_cond_init(&cond, NULL);
-    signal(SIGUSR1,sig_handler_sigusr1);
     pthread_t tab[X];
     for ( i = 0; i < X; i++) {
         int * a = (int*)malloc(sizeof(int));
