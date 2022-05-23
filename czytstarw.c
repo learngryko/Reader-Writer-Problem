@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-#define X 300
+#define X 400
 
 int check[X];
 pthread_mutex_t mutexR;
@@ -26,7 +26,7 @@ void sig_handler_sigusr1(int signum){
 void *writer(void *arg) {
     int i = *(int*)arg;
     free(arg);
-    //while (1) {
+    while (1) {
         pthread_mutex_lock(&mutex);
         while (coutR > 0)
             pthread_cond_wait(&cond, &mutex);
@@ -43,16 +43,13 @@ void *writer(void *arg) {
         pthread_mutex_unlock(&mutex);
 
         sleep(5);
-   // }
-
-
-
+    }
 }
 
 void *reader(void *arg) {
     int i= *(int*)arg;
     free(arg);
-    //while (1) {
+    while (1) {
         pthread_mutex_lock(&mutex);
         pthread_mutex_unlock(&mutex);
         pthread_mutex_lock(&mutexR);
@@ -70,8 +67,7 @@ void *reader(void *arg) {
         pthread_cond_signal(&cond);
         printf("\n");
         sleep(5);
-   // }
-
+    }
 }
 
 
@@ -113,6 +109,8 @@ int main(int argc, char *argv[]) {
     pthread_mutex_destroy(&mutexR);
     pthread_mutex_destroy(&mutexcheck);
     pthread_cond_destroy(&cond);
-
+	for(int i=0;i<X;i++)
+        printf("\t%d[%d]",check[i],i);
+    printf("\n");
     return 0;
 }
