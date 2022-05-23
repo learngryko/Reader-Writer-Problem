@@ -1,2 +1,2 @@
 all:
-	gcc -pthread libMain.c -o libMain
+	gcc -pthread czytstarw.c -o czyststarw.o
