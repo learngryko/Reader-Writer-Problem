@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-
+#define timeSpeed 0.02// mniej = szybciej
 
 
 pthread_mutex_t mutexR;
@@ -39,7 +39,7 @@ void *writer(void *arg) {
             pthread_cond_wait(&cond, &mutex);
         coutW++;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
-        usleep(rand()%8000000+500000);
+        usleep((rand()%8000000+500000)*timeSpeed);
         coutW--;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
         pthread_mutex_lock(&mutexcheck);
@@ -47,7 +47,7 @@ void *writer(void *arg) {
         pthread_mutex_unlock(&mutexcheck);
         pthread_cond_signal(&cond);
         pthread_mutex_unlock(&mutex);
-        usleep(rand()%8000000+5000000);
+        usleep((rand()%8000000+5000000)*timeSpeed);
     }
 }
 
@@ -65,7 +65,7 @@ void *reader(void *arg) {
         coutR++;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
         pthread_mutex_unlock(&mutexR);
-        usleep(rand()%8000000+500000);
+        usleep((rand()%8000000+500000)*timeSpeed);
         pthread_mutex_lock(&mutexR);
         coutR--;
         pthread_mutex_unlock(&mutexR);
@@ -75,7 +75,8 @@ void *reader(void *arg) {
         pthread_mutex_unlock(&mutexcheck);
         pthread_cond_signal(&cond);
         printf("\n");
-        usleep(rand()%8000000+5000000);
+        usleep((rand()%8000000+5000000)*timeSpeed);
+
     }
 }
 
