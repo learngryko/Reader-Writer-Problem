@@ -4,42 +4,43 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/types.h>
 
-#define timeSpeed 0.02// mniej = szybciej
+#define timeSpeed 0.2				// mniej = szybciej
 
 
-pthread_mutex_t mutexR;
-pthread_mutex_t mutex;
-pthread_cond_t cond;
-pthread_mutex_t mutexcheck;
-int W=0,R=0;
-int * check=NULL;
-int coutR = 0;// ilosc czytelnikow w bibliotece
-int coutW = 0;// ilosc pisarzy w bibliotece
+pthread_mutex_t mutexR;			//zmienna blokujaca liczbe readerow
+pthread_mutex_t mutex;			//zmienna blokujaca biblioteke oraz liczbe writerow
+pthread_cond_t cond;			//zmiena warunkowa wywolywana gdzy zmienie sie liczba osob w bibliotece
+pthread_mutex_t mutexcheck;		//mutex do sprawdzania wejsc
+int W=0,R=0;					//ilsoci writerow i readerow
+int * check=NULL;				//tablica do sprawdzania ilosci wejsc osoby
+int coutR = 0;					// ilosc czytelnikow w bibliotece
+int coutW = 0;					// ilosc pisarzy w bibliotece
+int end = 0;					//zmienna bezpiecznego zakonczenia
 
-/*
+
 void sig_handler_sigusr1(int signum){
-    for(int i=0;i<X;i++)
-        printf("\t%d[%d]",check[i],i);
-    printf("\n");
+	end=1; // pootrzymaniu SIGUSER1 zatrzymanie petli
+	return;
 }
-*/
+
 
 
 void *writer(void *arg) {
+    int i = *(int*)arg;
+    free(arg);
     int zarodek;
     time_t tt;
     zarodek = time(&tt);
     srand(zarodek);
-    int i = *(int*)arg;
-    free(arg);
-    while (1) {
+    while (end==0) {
         pthread_mutex_lock(&mutex);
         while (coutR > 0)
             pthread_cond_wait(&cond, &mutex);
         coutW++;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
-        usleep((rand()%8000000+500000)*timeSpeed);
+        usleep((rand()%1000000+500000)*timeSpeed);
         coutW--;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
         pthread_mutex_lock(&mutexcheck);
@@ -58,7 +59,7 @@ void *reader(void *arg) {
     time_t tt;
     zarodek = time(&tt);
     srand(zarodek);
-    while (1) {
+    while (end==0) {
         pthread_mutex_lock(&mutex);
         pthread_mutex_unlock(&mutex);
         pthread_mutex_lock(&mutexR);
@@ -74,7 +75,6 @@ void *reader(void *arg) {
         check[i]++;
         pthread_mutex_unlock(&mutexcheck);
         pthread_cond_signal(&cond);
-        printf("\n");
         usleep((rand()%8000000+5000000)*timeSpeed);
 
     }
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     int i=0;
     W = atoi(argv[1]);
 	R = atoi(argv[2]);
-    //signal(SIGUSR1,sig_handler_sigusr1);
+	signal(SIGUSR1,sig_handler_sigusr1);
     pthread_mutex_init(&mutexR, NULL);
     pthread_mutex_init(&mutex, NULL);
     pthread_mutex_init(&mutexcheck, NULL);
@@ -114,8 +114,12 @@ int main(int argc, char *argv[]) {
             perror("Failed to join thread");
         }
     }
+	for(i=0;i<W+R;i++)
+		printf("%d[%d]",check[i],i);
+	printf("\n");
 
-
+	free(check);
+	free(tab);
     pthread_mutex_destroy(&mutex);
     pthread_mutex_destroy(&mutexR);
     pthread_mutex_destroy(&mutexcheck);
