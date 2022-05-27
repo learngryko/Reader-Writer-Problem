@@ -11,14 +11,16 @@
 
 pthread_mutex_t mutexR;			//zmienna blokujaca liczbe readerow
 pthread_mutex_t mutex;			//zmienna blokujaca biblioteke oraz liczbe writerow
+pthread_mutex_t mutexQW;			//zmienna blokujaca biblioteke oraz liczbe writerow w kolejce
 pthread_cond_t cond;			//zmiena warunkowa wywolywana gdzy zmienie sie liczba osob w bibliotece
+pthread_cond_t condW;			//zmiena warunkowa wywolywana gdzy zmienie sie liczba pisarzy w kolejce
 pthread_mutex_t mutexcheck;		//mutex do sprawdzania wejsc
-int W=0,R=0;					//ilsoci writerow i readerow
+int W=0,R=0;					//ilosci writerow i readerow
 int * check=NULL;				//tablica do sprawdzania ilosci wejsc osoby
 int coutR = 0;					// ilosc czytelnikow w bibliotece
 int coutW = 0;					// ilosc pisarzy w bibliotece
 int end = 0;					//zmienna bezpiecznego zakonczenia
-
+int queueW = 0;					//ilosc pisarzy w kolejce
 
 void sig_handler_sigusr1(int signum){
 	printf("\n  SAVE TERMINATE \n\n");
@@ -36,9 +38,12 @@ void *writer(void *arg) {
     zarodek = time(&tt);
     srand(zarodek);
     while (end==0) {
+        pthread_mutex_lock(&mutexQW);
+		queueW++;
+        pthread_mutex_unlock(&mutexQW);
         pthread_mutex_lock(&mutex);
-        while (coutR > 0)
-            pthread_cond_wait(&cond, &mutex);
+		while(coutR>0)
+			pthread_cond_wait(&cond,&mutex);
         coutW++;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
         usleep((rand()%1000000+500000)*timeSpeed);
@@ -47,7 +52,13 @@ void *writer(void *arg) {
         pthread_mutex_lock(&mutexcheck);
         check[i]++;
         pthread_mutex_unlock(&mutexcheck);
-        pthread_cond_signal(&cond);
+        pthread_mutex_lock(&mutexQW);
+		queueW++;
+        pthread_mutex_unlock(&mutexQW);
+        pthread_mutex_lock(&mutexQW);
+		queueW--;
+		pthread_cond_broadcast(&condW);
+        pthread_mutex_unlock(&mutexQW);
         pthread_mutex_unlock(&mutex);
         usleep((rand()%8000000+5000000)*timeSpeed);
     }
@@ -61,7 +72,9 @@ void *reader(void *arg) {
     zarodek = time(&tt);
     srand(zarodek);
     while (end==0) {
-        pthread_mutex_lock(&mutex);
+		pthread_mutex_lock(&mutex);
+		while(end==0&&queueW>0)
+			pthread_cond_wait(&condW,&mutex);
         pthread_mutex_unlock(&mutex);
         pthread_mutex_lock(&mutexR);
         coutR++;
@@ -70,14 +83,13 @@ void *reader(void *arg) {
         usleep((rand()%8000000+500000)*timeSpeed);
         pthread_mutex_lock(&mutexR);
         coutR--;
+		pthread_cond_signal(&cond);
         pthread_mutex_unlock(&mutexR);
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n",R,W, coutR, coutW,i);
         pthread_mutex_lock(&mutexcheck);
         check[i]++;
         pthread_mutex_unlock(&mutexcheck);
-        pthread_cond_signal(&cond);
         usleep((rand()%8000000+5000000)*timeSpeed);
-
     }
 }
 
@@ -98,8 +110,10 @@ int main(int argc, char *argv[]) {
 	}
     pthread_mutex_init(&mutexR, NULL);
     pthread_mutex_init(&mutex, NULL);
+    pthread_mutex_init(&mutexQW, NULL);
     pthread_mutex_init(&mutexcheck, NULL);
     pthread_cond_init(&cond, NULL);
+    pthread_cond_init(&condW, NULL);
 
     for ( i = 0; i < W; i++) {
         int *a = (int *) malloc(sizeof(int));
@@ -126,9 +140,11 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 
     pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&mutexQW);
     pthread_mutex_destroy(&mutexR);
     pthread_mutex_destroy(&mutexcheck);
     pthread_cond_destroy(&cond);
+    pthread_cond_destroy(&condW);
 	free(check);
 	free(tab);
     return 0;
