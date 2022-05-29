@@ -11,7 +11,8 @@
 
 pthread_mutex_t mutexR;            //zmienna blokujaca liczbe readerow
 pthread_mutex_t mutex;            //zmienna blokujaca biblioteke oraz liczbe writerow
-pthread_cond_t cond;            //zmiena warunkowa wywolywana gdzy zmienie sie liczba osob w bibliotece
+pthread_cond_t condR;            //zmiena warunkowa wywolywana przy zmienie typu osob w bibliotece
+pthread_cond_t condW;            //zmiena warunkowa wywolywana przy zmienie typu osob w bibliotece
 pthread_mutex_t mutexcheck;        //mutex do sprawdzania wejsc
 int W = 0, R = 0;                    //ilsoci writerow i readerow
 int *check = NULL;                //tablica do sprawdzania ilosci wejsc osoby
@@ -28,24 +29,17 @@ void sig_handler_sigusr1(int signum) {
 void *writer(void *arg) {
     int i = *(int *) arg;
     free(arg);
-    int zarodek;
-    time_t tt;
+    int zarodek=0;
+    time_t tt=0;
     zarodek = time(&tt);
     srand(zarodek);
     while (end == 0) {
-        pthread_mutex_lock(&mutex);
-        while (coutR > 0)
-            pthread_cond_wait(&cond, &mutex);
-        coutW++;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", R, W, coutR, coutW, i);
         usleep((rand() % 1000000 + 500000) * timeSpeed);
-        coutW--;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", R, W, coutR, coutW, i);
         pthread_mutex_lock(&mutexcheck);
         check[i]++;
         pthread_mutex_unlock(&mutexcheck);
-        pthread_cond_signal(&cond);
-        pthread_mutex_unlock(&mutex);
         usleep((rand() % 8000000 + 5000000) * timeSpeed);
     }
 }
@@ -53,26 +47,17 @@ void *writer(void *arg) {
 void *reader(void *arg) {
     int i = *(int *) arg;
     free(arg);
-    int zarodek;
-    time_t tt;
+    int zarodek=0;
+    time_t tt=0;
     zarodek = time(&tt);
     srand(zarodek);
     while (end == 0) {
-        pthread_mutex_lock(&mutex);
-        pthread_mutex_unlock(&mutex);
-        pthread_mutex_lock(&mutexR);
-        coutR++;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", R, W, coutR, coutW, i);
-        pthread_mutex_unlock(&mutexR);
         usleep((rand() % 8000000 + 500000) * timeSpeed);
-        pthread_mutex_lock(&mutexR);
-        coutR--;
-        pthread_mutex_unlock(&mutexR);
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", R, W, coutR, coutW, i);
         pthread_mutex_lock(&mutexcheck);
         check[i]++;
         pthread_mutex_unlock(&mutexcheck);
-        pthread_cond_signal(&cond);
         usleep((rand() % 8000000 + 5000000) * timeSpeed);
 
     }
@@ -94,7 +79,8 @@ int main(int argc, char *argv[]) {
     pthread_mutex_init(&mutexR, NULL);
     pthread_mutex_init(&mutex, NULL);
     pthread_mutex_init(&mutexcheck, NULL);
-    pthread_cond_init(&cond, NULL);
+    pthread_cond_init(&condR, NULL);
+    pthread_cond_init(&condW, NULL);
 
     for (i = 0; i < W; i++) {
         int *a = (int *) malloc(sizeof(int));
@@ -122,7 +108,8 @@ int main(int argc, char *argv[]) {
     pthread_mutex_destroy(&mutex);
     pthread_mutex_destroy(&mutexR);
     pthread_mutex_destroy(&mutexcheck);
-    pthread_cond_destroy(&cond);
+    pthread_cond_destroy(&condW);
+    pthread_cond_destroy(&condR);
     free(check);
     free(tab);
     return 0;
