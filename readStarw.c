@@ -45,27 +45,27 @@ void *reader(void *arg) {
     srand(zarodek);
     while (end == 0) {
         pthread_mutex_lock(&mutexQR);
-		queueR++;	//zwiekszenie koleji readerow
+	queueR++;	//zwiekszenie koleji readerow
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutexQR);
         pthread_mutex_lock(&mutex); // oczekiwanie na brak writerow w bibliotece
-		while(queueW>0&&end==0)
-			pthread_cond_wait(&cond,&mutex);  // oczekiwanie na zmiane ilosci writerow w kolejce do biblioteki
-		pthread_mutex_unlock(&mutex);
+	while(queueW>0&&end==0)
+	pthread_cond_wait(&cond,&mutex);  // oczekiwanie na zmiane ilosci writerow w kolejce do biblioteki
+	pthread_mutex_unlock(&mutex);
         pthread_mutex_lock(&mutexR);
-		coutR++; //zwiekszenie ilosci readerow w bibliotece
+	coutR++; //zwiekszenie ilosci readerow w bibliotece
         pthread_mutex_unlock(&mutexR);
-		pthread_mutex_lock(&mutexQR);
-		queueR--; //zmniejszenie kolejki readerow
+	pthread_mutex_lock(&mutexQR);
+	queueR--; //zmniejszenie kolejki readerow
         pthread_mutex_unlock(&mutexQR);
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         usleep((rand() % 5000000 + 500000) * TIMESPEED);  //czytanie
-		pthread_mutex_lock(&mutexR);
-		coutR--;	//zmniejszenie ilosci readerow w biliotece
+	pthread_mutex_lock(&mutexR);
+	coutR--;	//zmniejszenie ilosci readerow w biliotece
         pthread_mutex_unlock(&mutexR);
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_cond_signal(&condR); //wyslanie sygnalu o wyjsciu z biblioteki
-		pthread_mutex_lock(&mutexcheck);
+	pthread_mutex_lock(&mutexcheck);
         check[i]++;		//powiekszenie ilosci odwiedzen w bibliotece
         pthread_mutex_unlock(&mutexcheck);
         usleep((rand() % 8000000 + 5000000) * TIMESPEED); //odczekiwanie na ponowne wejsce do kolejki
@@ -86,18 +86,18 @@ void *writer(void *arg) {
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutexQW);
         pthread_mutex_lock(&mutex);
-		while(coutR>0&&end==0)
-			pthread_cond_wait(&condR,&mutex); //oczekiwanie na sygnal od zmianie iloci readerow w biliotece
-		coutW++;
-	    pthread_mutex_lock(&mutexQW);
-		queueW--;
+	while(coutR>0&&end==0)
+		pthread_cond_wait(&condR,&mutex); //oczekiwanie na sygnal od zmianie iloci readerow w biliotece
+	coutW++;
+	pthread_mutex_lock(&mutexQW);
+	queueW--;
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutexQW);
         usleep((rand() % 8000000 + 5000000) * TIMESPEED);
-		coutW--;
-		printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
+	coutW--;
+	printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutex);
-		pthread_cond_broadcast(&cond); // wyslanie sygnalu do wszystkich oczekujacych readerow po zmianie ilosci writerow w bibliotece
+	pthread_cond_broadcast(&cond); // wyslanie sygnalu do wszystkich oczekujacych readerow po zmianie ilosci writerow w bibliotece
         pthread_mutex_lock(&mutexcheck);
         check[i]++;
         pthread_mutex_unlock(&mutexcheck);
