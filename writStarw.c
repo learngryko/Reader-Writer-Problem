@@ -39,15 +39,15 @@ void *writer(void *arg) {
     srand(zarodek);
     while (end == 0) {
         pthread_mutex_lock(&mutexQW);		//zablokowanie biblioteki
-		queueW++;	//zwiekszenie kolejki
+	queueW++;	//zwiekszenie kolejki
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutexQW);
         pthread_mutex_lock(&mutex);
         while (coutR > 0 && end == 0) //oczekiwanie na zmiane ilosci readerow w bibliotece
-            pthread_cond_wait(&cond, &mutex);
+        pthread_cond_wait(&cond, &mutex);
         coutW++;  //zwiekszenie ilosci writerow w bibliotece 
         pthread_mutex_unlock(&mutexQW);
-		queueW--;	//zmniejszenie kolejki
+	queueW--;	//zmniejszenie kolejki
         pthread_mutex_unlock(&mutexQW);
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         usleep((rand() % 1000000 + 500000) * TIMESPEED);	//pisanie
@@ -70,8 +70,8 @@ void *reader(void *arg) {
     zarodek = time(&tt);
     srand(zarodek);
     while (end == 0) {
-		pthread_mutex_lock(&mutexQR);
-		queueR++; //dodanie readera do kolejki
+	pthread_mutex_lock(&mutexQR);
+	queueR++; //dodanie readera do kolejki
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutexQR);
         pthread_mutex_lock(&mutex); // oczekiwaie na brak pisarza w bibliotece
@@ -79,8 +79,8 @@ void *reader(void *arg) {
         pthread_mutex_lock(&mutexR);
         coutR++;	//zwiekszenie readerow w bibliotece
         pthread_mutex_unlock(&mutexR);
-		pthread_mutex_lock(&mutexQR);
-		queueR--;		//zmniejszenie kolejki readerow
+	pthread_mutex_lock(&mutexQR);
+	queueR--;		//zmniejszenie kolejki readerow
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutexQR);
         usleep((rand() % 8000000 + 500000) * TIMESPEED);  //czytanie
