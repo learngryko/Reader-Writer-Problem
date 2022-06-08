@@ -29,6 +29,7 @@ int turn=0;
 void sig_handler_sigusr1(int signum) {
     printf("\n  SAVE TERMINATE \n\n");
     end = 1; // pootrzymaniu SIGUSER1 zatrzymanie petli
+	turn = 3;
 	for(int i=10;i>0;i--){
 		sleep(1*TIMESPEED);
 		printf("Terminate in %d\n",i);
