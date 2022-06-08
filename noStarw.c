@@ -52,7 +52,7 @@ void *reader(void *arg) {
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutexQR);
         pthread_mutex_lock(&mutex); // oczekiwanie na brak writerow w bibliotece
-	while((coutW>0&&end==0) || turn==1)
+	while((coutW>0 || turn==1) && end == 0)
 		pthread_cond_wait(&cond,&mutex);  // oczekiwanie na zmiane ilosci writerow w kolejce do biblioteki
 	pthread_mutex_unlock(&mutex);
         pthread_mutex_lock(&mutexR);
@@ -93,7 +93,7 @@ void *writer(void *arg) {
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutexQW);
         pthread_mutex_lock(&mutex);
-	while(((coutR > 0  &&  end == 0) || turn == 0)&&R>0)
+	while((coutR > 0 || turn == 0)&&R>0&& end==0)
 		pthread_cond_wait(&condR,&mutex); //oczekiwanie na sygnal od zmianie iloci readerow w biliotece
 	coutW++;
 	pthread_mutex_lock(&mutexQW);
@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
         }
     }
     for (i = 0; i < W + R; i++) // wypisanie ilosci wstapen do biblioteki
-        printf("%d[%d]", check[i], i);
+        printf("%d[%d] ", check[i], i);
     printf("\n");
 
     pthread_cond_destroy(&cond); // zniszczenie zmiennych warunkowych i mutexow
