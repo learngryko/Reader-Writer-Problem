@@ -74,6 +74,8 @@ void *reader(void *arg) {
         check[i]++;		//powiekszenie ilosci odwiedzen w bibliotece
         pthread_mutex_unlock(&mutexcheck);
         usleep((rand() % 8000000 + 5000000) * TIMESPEED); //odczekiwanie na ponowne wejsce do kolejki
+    pthread_cond_broadcast(&condR);
+    pthread_cond_broadcast(&cond);
     }
 }
 
@@ -109,6 +111,8 @@ void *writer(void *arg) {
         check[i]++;
         pthread_mutex_unlock(&mutexcheck);
         usleep((rand() % 8000000 + 5000000) * TIMESPEED);
+    pthread_cond_broadcast(&condR);
+    pthread_cond_broadcast(&cond);
     }
 }
 
