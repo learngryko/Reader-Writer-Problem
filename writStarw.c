@@ -20,8 +20,8 @@ int *check = NULL;                //tablica do sprawdzania ilosci wejsc osoby
 int coutR = 0;                    // ilosc czytelnikow w bibliotece
 int coutW = 0;                    // ilosc pisarzy w bibliotece
 int end = 0;                    //zmienna bezpiecznego zakonczenia
-int queueW=0;					//kolejka writerow
-int queueR=0;					//kolejka readerow
+int queueW = 0;                    //kolejka writerow
+int queueR = 0;                    //kolejka readerow
 
 
 void sig_handler_sigusr1(int signum) {
@@ -32,67 +32,67 @@ void sig_handler_sigusr1(int signum) {
 
 void *writer(void *arg) {
     int i = *(int *) arg; // przypisanie wartosci id watku dla i
-    free(arg);	//wyczyszczenie pamieci zamalokowanej w main
-    int zarodek=0;
-    time_t tt=0;
+    free(arg);    //wyczyszczenie pamieci zamalokowanej w main
+    int zarodek = 0;
+    time_t tt = 0;
     zarodek = time(&tt);
     srand(zarodek);
     while (end == 0) {
-        pthread_mutex_lock(&mutexQW);		//zablokowanie biblioteki
-	queueW++;	//zwiekszenie kolejki
+        pthread_mutex_lock(&mutexQW);        //zablokowanie biblioteki
+        queueW++;    //zwiekszenie kolejki
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutexQW);
         pthread_mutex_lock(&mutex);
         while (coutR > 0 && end == 0) //oczekiwanie na zmiane ilosci readerow w bibliotece
-        pthread_cond_wait(&cond, &mutex);
+            pthread_cond_wait(&cond, &mutex);
         coutW++;  //zwiekszenie ilosci writerow w bibliotece 
         pthread_mutex_unlock(&mutexQW);
-	queueW--;	//zmniejszenie kolejki
+        queueW--;    //zmniejszenie kolejki
         pthread_mutex_unlock(&mutexQW);
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
-        usleep((rand() % 1000000 + 500000) * TIMESPEED);	//pisanie
-        coutW--;	//zmniejszenie ilosci  writerow w bibliotece
+        usleep((rand() % 1000000 + 500000) * TIMESPEED);    //pisanie
+        coutW--;    //zmniejszenie ilosci  writerow w bibliotece
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutex);
         pthread_mutex_lock(&mutexcheck);
-        check[i]++;		//aktulizacja ilosci odwiedzin
+        check[i]++;        //aktulizacja ilosci odwiedzin
         pthread_mutex_unlock(&mutexcheck);
         pthread_cond_signal(&cond);
-        usleep((rand() % 8000000 + 5000000) * TIMESPEED); 		//oczekiwanie na ponowne wejcie do kolejki
+        usleep((rand() % 8000000 + 5000000) * TIMESPEED);        //oczekiwanie na ponowne wejcie do kolejki
     }
 }
 
 void *reader(void *arg) {
     int i = *(int *) arg;
     free(arg);
-    int zarodek=0;
-    time_t tt=0;
+    int zarodek = 0;
+    time_t tt = 0;
     zarodek = time(&tt);
     srand(zarodek);
     while (end == 0) {
-	pthread_mutex_lock(&mutexQR);
-	queueR++; //dodanie readera do kolejki
+        pthread_mutex_lock(&mutexQR);
+        queueR++; //dodanie readera do kolejki
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutexQR);
         pthread_mutex_lock(&mutex); // oczekiwaie na brak pisarza w bibliotece
         pthread_mutex_unlock(&mutex); //
         pthread_mutex_lock(&mutexR);
-        coutR++;	//zwiekszenie readerow w bibliotece
+        coutR++;    //zwiekszenie readerow w bibliotece
         pthread_mutex_unlock(&mutexR);
-	pthread_mutex_lock(&mutexQR);
-	queueR--;		//zmniejszenie kolejki readerow
+        pthread_mutex_lock(&mutexQR);
+        queueR--;        //zmniejszenie kolejki readerow
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutexQR);
         usleep((rand() % 8000000 + 500000) * TIMESPEED);  //czytanie
         pthread_mutex_lock(&mutexR);
-        coutR--;	//zmniejszenie ilosci readerow w bibliotece
+        coutR--;    //zmniejszenie ilosci readerow w bibliotece
         printf("ReaderQ: %d WriterQ: %d [in: R:%d W:%d]\t%d\n", queueR, queueW, coutR, coutW, i);
         pthread_mutex_unlock(&mutexR);
         pthread_mutex_lock(&mutexcheck);
-        check[i]++;		//zwiekszenie ilosci odwiedzin watku
+        check[i]++;        //zwiekszenie ilosci odwiedzin watku
         pthread_mutex_unlock(&mutexcheck);
-        pthread_cond_signal(&cond);		//wyslanie sygnalu o zmianie ilosci readerow w bibliotece
-        usleep((rand() % 8000000 + 5000000) * TIMESPEED);	//oczekiwanie na ponowne wejscie do kolejki
+        pthread_cond_signal(&cond);        //wyslanie sygnalu o zmianie ilosci readerow w bibliotece
+        usleep((rand() % 8000000 + 5000000) * TIMESPEED);    //oczekiwanie na ponowne wejscie do kolejki
 
     }
 }
@@ -101,8 +101,8 @@ void *reader(void *arg) {
 int main(int argc, char *argv[]) {
     if (argc < 3) return -1; // wyjsce jesli nie dostaniemy 2 argumentow
     int i = 0;
-    W = atoi(argv[1]);	//przypisanie liczy writerow
-    R = atoi(argv[2]);	//przypisanie liczy readerow
+    W = atoi(argv[1]);    //przypisanie liczy writerow
+    R = atoi(argv[2]);    //przypisanie liczy readerow
     signal(SIGUSR1, sig_handler_sigusr1); //rejestracja sygnalu SIGUSR1 by bezpiecznie wyjsc nie tracac pamieci
     check = (int *) malloc(sizeof(int) * (W + R));   //rezerwacja pamieci dla tablicy zliczajacej ilosc odwiedzin
     pthread_t *tab = (pthread_t *) malloc(sizeof(pthread_t) * (W + R));  //rezerwacja pamieci dla tablicy watkow
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
         check[i] = 0;
         tab[i] = 0;
     }
-    pthread_mutex_init(&mutexR, NULL);		//inicjalizacja mutexow i zmiennych warunkowych
+    pthread_mutex_init(&mutexR, NULL);        //inicjalizacja mutexow i zmiennych warunkowych
     pthread_mutex_init(&mutexQR, NULL);
     pthread_mutex_init(&mutexQW, NULL);
     pthread_mutex_init(&mutex, NULL);
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
     for (i = 0; i < W + R; i++)
         printf("%d[%d]", check[i], i);
     printf("\n");
-    pthread_mutex_destroy(&mutex);		//usuniecie mutexow i zmiennych warunkowych
+    pthread_mutex_destroy(&mutex);        //usuniecie mutexow i zmiennych warunkowych
     pthread_mutex_destroy(&mutexR);
     pthread_mutex_destroy(&mutexQR);
     pthread_mutex_destroy(&mutexQW);
