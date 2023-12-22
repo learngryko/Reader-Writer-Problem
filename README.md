@@ -18,4 +18,9 @@ git clone https://github.com/TheRipSon/Reader-Writer-Problem.git
 cd Reader-Writer-Problem
 make
 ./noStarw <writers> <readers>
-
+```
+send SIGUSER1 to stop program
+```bash
+ps -C noStarw
+kill -s USR1 <pid>
+```
