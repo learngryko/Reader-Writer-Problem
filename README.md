@@ -14,7 +14,7 @@ This repository contains a solution to the classic Reader-Writer problem in comp
 To use this code, clone the repository and compile the code using the provided Makefile.
 
 ```bash
-git clone https://github.com/TheRipSon/Reader-Writer-Problem.git
+git clone https://github.com/learngryko/Reader-Writer-Problem.git
 cd Reader-Writer-Problem
 make
 ./noStarw <writers> <readers>
